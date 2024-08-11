@@ -17,12 +17,10 @@
         manifest = (pkgs.lib.importTOML ./Cargo.toml).package;
         name = manifest.name;
       in
-      rec
+      # rec
       {
-        packages = {
-          ${name} = pkgs.callPackage ./default.nix { };
-          default = packages.${name};
-        };
+        packages.default = pkgs.callPackage ./default.nix { };
+        # packages.default = packages.${name};
 
         apps.${name} = {
           type = "app";
