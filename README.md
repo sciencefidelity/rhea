@@ -31,12 +31,13 @@ Now the `rnix` command is available for your user and is a basic replacement for
 ```bash
 # make a binary project called foo-bar
 rnix foo-bar
-# also like this
+# this also works
 rnix foo-bar --bin
-# make a library project
+# make a library project instead
 rnix foo-bar --lib
 # now have fun developing with Nix...
 cd foo-bar
+direnv allow
 cargo run
 nix build
 ```
