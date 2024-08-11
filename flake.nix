@@ -19,8 +19,15 @@
       in
       rec
       {
-        packages.${name} = pkgs.callPackage ./default.nix { };
-        packages.default = packages.${name};
+        packages = {
+          ${name} = pkgs.callPackage ./default.nix { };
+          default = packages.${name};
+        };
+
+        apps.${name} = {
+          type = "app";
+          program = "${self.packages.${system}.runme}/bin/${name}";
+        };
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
