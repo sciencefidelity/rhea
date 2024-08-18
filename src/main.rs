@@ -7,6 +7,16 @@ enum AppType {
 }
 
 fn main() -> io::Result<()> {
+    match run() {
+        Ok(()) => std::process::exit(0),
+        Err(err) => {
+            eprintln!("{err:?}");
+            std::process::abort();
+        }
+    }
+}
+
+fn run() -> io::Result<()> {
     let mut args = std::env::args();
     args.next();
     let name = args.next().expect("missing argument 'name'");
@@ -15,17 +25,20 @@ fn main() -> io::Result<()> {
         match t.as_str() {
             "--bin" => app_type = AppType::Bin,
             "--lib" => app_type = AppType::Lib,
-            _ => panic!("unknown type {app_type:?}"),
+            _ => {
+                eprintln!("unknown type {app_type:?}");
+                std::process::abort();
+            }
         }
     }
 
     let root_dir = Path::new(&name);
     // TODO: prompt that directory already exists and ask if we should use it.
     if root_dir.exists() {
-        assert!(
-            root_dir.read_dir()?.next().is_none(),
-            "directory '{name}' already exists and is not empty"
-        );
+        if root_dir.read_dir()?.next().is_none() {
+            eprintln!("directory '{name}' already exists and is not empty");
+            std::process::abort();
+        }
     } else {
         fs::create_dir(root_dir)?;
     }
