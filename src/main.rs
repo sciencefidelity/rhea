@@ -17,8 +17,7 @@ fn main() -> io::Result<()> {
 }
 
 fn run() -> io::Result<()> {
-    let mut args = std::env::args();
-    args.next();
+    let mut args = std::env::args().skip(1);
     let name = args.next().expect("missing argument 'name'");
     let mut app_type = AppType::Bin;
     if let Some(t) = args.next() {
@@ -42,13 +41,13 @@ fn run() -> io::Result<()> {
     } else {
         fs::create_dir(root_dir)?;
     }
-    fs::write(root_dir.join(".envrc"), "use flake\ndotenv")?;
+    fs::write(root_dir.join(".envrc"), "use flake\ndotenv\n")?;
     let current_dir = env::current_dir()?;
     fs::write(
         root_dir.join(".env"),
         format!("PROJECT_ROOT={}", current_dir.display()),
     )?;
-    fs::write(root_dir.join(".gitignore"), "/target\n/.direnv\n.env")?;
+    fs::write(root_dir.join(".gitignore"), "/target\n/.direnv\n.env\n")?;
     fs::write(root_dir.join("flake.nix"), generate_flake())?;
     fs::write(root_dir.join("Cargo.toml"), generate_cargo_toml(&name))?;
     fs::write(root_dir.join("README.md"), format!("# {}", &name))?;
@@ -97,7 +96,8 @@ fn generate_flake() -> String {
         };
       }
     );
-}"#,
+}
+"#,
     )
 }
 
@@ -131,7 +131,7 @@ panic = "abort"
 strip = "symbols"
 
 [dependencies]
-    "#,
+"#,
     )
 }
 
@@ -139,13 +139,14 @@ fn generate_bin() -> String {
     String::from(
         r#"fn main() {
     println!("Hello, world!");
-}"#,
+}
+"#,
     )
 }
 
 fn generate_lib() -> String {
     String::from(
-        "pub fn add(left: u64, right: u64) -> u64 {
+        r#"pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
 
@@ -158,6 +159,7 @@ mod tests {
         let result = add(2, 2);
         assert_eq!(result, 4);
     }
-}",
+}
+"#,
     )
 }
