@@ -25,5 +25,5 @@ panic = "abort"
 strip = "symbols"
 
 [dependencies]
-
+indoc = "2"
 

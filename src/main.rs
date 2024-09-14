@@ -1,5 +1,10 @@
 use std::{env, fs, io, path::Path};
 
+mod nix;
+mod rust;
+use nix::generate_flake;
+use rust::{generate_bin, generate_cargo_toml, generate_lib};
+
 #[derive(Debug, PartialEq)]
 enum AppType {
     Lib,
@@ -50,7 +55,7 @@ fn run() -> io::Result<()> {
     fs::write(root_dir.join(".gitignore"), "/target\n/.direnv\n.env\n")?;
     fs::write(root_dir.join("flake.nix"), generate_flake())?;
     fs::write(root_dir.join("Cargo.toml"), generate_cargo_toml(&name))?;
-    fs::write(root_dir.join("README.md"), format!("# {}", &name))?;
+    fs::write(root_dir.join("README.md"), format!("# {}\n", &name))?;
 
     let src_dir = root_dir.join("src");
     fs::create_dir(&src_dir)?;
@@ -60,106 +65,4 @@ fn run() -> io::Result<()> {
         fs::write(src_dir.join("lib.rs"), generate_lib())?;
     }
     Ok(())
-}
-
-fn generate_flake() -> String {
-    String::from(
-        r#"{
-  description = "A Rust devshell";
-
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
-
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs {
-          inherit system overlays;
-        };
-      in
-      with pkgs;
-      {
-        devShells.default = mkShell {
-          buildInputs = [
-            pkg-config
-            (rust-bin.stable.latest.default.override {
-              extensions = [ "rust-analyzer" "rust-src" ];
-            })
-          ];
-
-          shellHook = /*bash*/ ''
-          '';
-        };
-      }
-    );
-}
-"#,
-    )
-}
-
-fn generate_cargo_toml(name: &String) -> String {
-    // TODO: get author, GitHub username and email programmatically.
-    format!(
-        r#"[package]
-name = "{name}"
-version = "0.1.0"
-edition = "2021"
-authors = ["Matt Cook <matt@mattcook.dev>"]
-description = ""
-readme = "README.md"
-repository = "https://github.com/sciencefidelity/{name}"
-license = "MIT or Apache-2.0"
-
-[lints.rust]
-unsafe_code = "forbid"
-
-[lints.clippy]
-enum_glob_use = "deny"
-pedantic = {{ level = "deny", priority = 1 }}
-nursery = {{ level = "deny", priority = 2 }}
-unwrap_used = "deny"
-
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = "symbols"
-
-[dependencies]
-"#,
-    )
-}
-
-fn generate_bin() -> String {
-    String::from(
-        r#"fn main() {
-    println!("Hello, world!");
-}
-"#,
-    )
-}
-
-fn generate_lib() -> String {
-    String::from(
-        r#"pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
-"#,
-    )
 }
