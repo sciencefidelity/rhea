@@ -24,6 +24,7 @@ pub fn generate_flake() -> String {
                 devShells.default = mkShell {{
                   buildInputs = [
                     pkg-config
+                    taplo
                     (rust-bin.stable.latest.default.override {{
                       extensions = [ "rust-analyzer" "rust-src" ];
                     }})

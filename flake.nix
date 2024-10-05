@@ -30,6 +30,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             pkg-config
+            taplo
             (rust-bin.stable.latest.default.override {
               extensions = [ "rust-analyzer" "rust-src" ];
             })

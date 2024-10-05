@@ -26,4 +26,3 @@ strip = "symbols"
 
 [dependencies]
 indoc = "2"
-
