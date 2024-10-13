@@ -29,3 +29,4 @@ anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 clap-cargo = "0.14"
 indoc = "2"
+serde = { version = "1.0.210", features = ["derive"] }

@@ -1,16 +1,28 @@
-use clap::{Arg, ArgAction, Command};
+use clap::{builder::EnumValueParser, Arg, ArgAction, Command, ValueEnum};
+use serde::Serialize;
 
 /// Possible values allowed for the `--edition` CLI flag.
 pub const RUST_EDITIONS: [&str; 4] = ["2015", "2018", "2021", "2024"];
+
+#[derive(Clone, Debug, Default, ValueEnum, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Compiler {
+    #[default]
+    Stable,
+    Beta,
+    Nightly,
+}
 
 #[derive(Debug)]
 pub struct Args {
     pub path: String,
     pub edition: &'static str,
+    pub compiler: Compiler,
     pub name: String,
     pub description: String,
     pub bin: bool,
     pub lib: bool,
+    pub packages: Vec<String>,
 }
 
 impl Args {
@@ -20,7 +32,6 @@ impl Args {
             .bin_name("rhea")
             .styles(CLAP_STYLING)
             .version("0.1.0")
-            .author("Matt Cook <matt@mattcook.dev>")
             .about("Create a new Cargo package at <path> with Nix")
             .arg(Arg::new("path").value_name("PATH"))
             .arg(
@@ -29,6 +40,13 @@ impl Args {
                     .value_name("YEAR")
                     .value_parser(RUST_EDITIONS)
                     .help("Rust edition"),
+            )
+            .arg(
+                Arg::new("compiler")
+                    .long("compiler")
+                    .value_name("COMPILER")
+                    .value_parser(EnumValueParser::<Compiler>::new())
+                    .help("Which Rust compiler to use"),
             )
             .arg(
                 Arg::new("name")
@@ -55,6 +73,13 @@ impl Args {
                     .conflicts_with("bin")
                     .help("Use the library template"),
             )
+            .arg(
+                Arg::new("packages")
+                    .long("packages")
+                    .value_name("PACKAGE")
+                    .help("Extra environment packages")
+                    .num_args(1..),
+            )
             .get_matches();
 
         let path = matches
@@ -70,19 +95,30 @@ impl Args {
             .cloned()
             .unwrap_or(String::new());
         let edition = matches.get_one("edition").copied().unwrap_or("2021");
+        let compiler = matches
+            .get_one("compiler")
+            .unwrap_or(&Compiler::default())
+            .clone();
         let (mut bin, mut lib) = (true, false);
-        if matches.get_one("lib") == Some(&true) {
+        if matches.get_flag("lib") {
             bin = false;
             lib = true;
         }
+        let packages = matches
+            .get_many("packages")
+            .unwrap_or_default()
+            .cloned()
+            .collect();
 
         Self {
             path,
             edition,
+            compiler,
             name,
             description,
             bin,
             lib,
+            packages,
         }
     }
 }

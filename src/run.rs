@@ -24,7 +24,7 @@ pub fn run(args: &Args) -> Result<()> {
         format!("PROJECT_ROOT={}", current_dir.display()),
     )?;
     fs::write(root_dir.join(".gitignore"), "/target\n/.direnv\n.env\n")?;
-    fs::write(root_dir.join("flake.nix"), generate_flake())?;
+    fs::write(root_dir.join("flake.nix"), generate_flake(args))?;
     fs::write(root_dir.join("Cargo.toml"), generate_cargo_toml(args))?;
     fs::write(root_dir.join("README.md"), generate_readme(args))?;
 

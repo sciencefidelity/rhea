@@ -1,6 +1,29 @@
 use indoc::formatdoc;
 
-pub fn generate_flake() -> String {
+use crate::{args::Compiler, Args};
+
+pub fn generate_flake(args: &Args) -> String {
+    let rust_bin = match args.compiler {
+        Compiler::Stable => {
+            r#"(rust-bin.stable.latest.default.override {
+              extensions = [ "rust-analyzer" "rust-src" ];
+            })"#
+        }
+        Compiler::Beta => {
+            r#"(rust-bin.beta.latest.default.override {
+              extensions = [ "rust-analyzer" "rust-src" ];
+            })"#
+        }
+        Compiler::Nightly => {
+            r#"(rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+              extensions = [ "rust-analyzer" "rust-src" ];
+            }))"#
+        }
+    };
+    let mut packages = args.packages.clone();
+    packages.push("pkg-config".to_owned());
+    packages.sort_unstable();
+    let packages = packages.join("\n            ");
     formatdoc! {r#"
         {{
           description = "A Rust devshell";
@@ -23,11 +46,8 @@ pub fn generate_flake() -> String {
               {{
                 devShells.default = mkShell {{
                   buildInputs = [
-                    pkg-config
-                    taplo
-                    (rust-bin.stable.latest.default.override {{
-                      extensions = [ "rust-analyzer" "rust-src" ];
-                    }})
+                    {packages}
+                    {rust_bin}
                   ];
 
                   shellHook = /*bash*/ ''
