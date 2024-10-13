@@ -27,4 +27,5 @@ strip = "symbols"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+clap-cargo = "0.14"
 indoc = "2"

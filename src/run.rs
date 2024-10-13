@@ -5,7 +5,8 @@ use crate::rust::{generate_bin, generate_cargo_toml, generate_lib};
 use crate::{nix::generate_flake, Args};
 use anyhow::Result;
 
-pub fn run(args: Args) -> Result<()> {
+#[allow(clippy::missing_errors_doc)]
+pub fn run(args: &Args) -> Result<()> {
     let root_dir = Path::new(&args.path);
     // TODO: prompt that directory already exists and ask if we should use it.
     if root_dir.exists() {
@@ -24,8 +25,8 @@ pub fn run(args: Args) -> Result<()> {
     )?;
     fs::write(root_dir.join(".gitignore"), "/target\n/.direnv\n.env\n")?;
     fs::write(root_dir.join("flake.nix"), generate_flake())?;
-    fs::write(root_dir.join("Cargo.toml"), generate_cargo_toml(&args))?;
-    fs::write(root_dir.join("README.md"), generate_readme(&args))?;
+    fs::write(root_dir.join("Cargo.toml"), generate_cargo_toml(args))?;
+    fs::write(root_dir.join("README.md"), generate_readme(args))?;
 
     let src_dir = root_dir.join("src");
     fs::create_dir(&src_dir)?;

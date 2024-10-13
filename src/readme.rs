@@ -2,6 +2,7 @@ use indoc::formatdoc;
 
 use crate::Args;
 
+#[allow(clippy::module_name_repetitions)]
 pub fn generate_readme(args: &Args) -> String {
     let name = args.name.as_str();
     let mut content = formatdoc! {r#"
