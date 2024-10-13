@@ -1,10 +1,7 @@
-use std::io;
+use anyhow::Result;
 
-use clap::Parser;
-use rhea::Args;
-
-fn main() -> io::Result<()> {
-    if let Err(e) = rhea::run(Args::parse()) {
+fn main() -> Result<()> {
+    if let Err(e) = rhea::run(rhea::get_args()?) {
         eprintln!("{e:?}");
         std::process::exit(1);
     }

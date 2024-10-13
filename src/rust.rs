@@ -1,14 +1,19 @@
 use indoc::formatdoc;
 
-pub fn generate_cargo_toml(name: &String) -> String {
+use crate::Args;
+
+pub fn generate_cargo_toml(args: &Args) -> String {
+    let name = args.name.as_str();
+    let description = args.description.as_str();
+    let edition = args.edition;
     // TODO: get author, GitHub username and email programmatically.
     formatdoc! {r#"
         [package]
         name = "{name}"
         version = "0.1.0"
-        edition = "2021"
+        edition = "{edition}"
         authors = ["Matt Cook <matt@mattcook.dev>"]
-        description = ""
+        description = "{description}"
         readme = "README.md"
         repository = "https://github.com/sciencefidelity/{name}"
         license = "MIT or Apache-2.0"
