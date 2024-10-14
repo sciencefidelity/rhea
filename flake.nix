@@ -29,6 +29,7 @@
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
+            openssl
             pkg-config
             taplo
             (rust-bin.stable.latest.default.override {

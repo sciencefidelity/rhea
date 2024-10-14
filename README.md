@@ -1,4 +1,4 @@
-# rnix
+# rhea
 
 A simple project generator for Rust in a nix environment.
 
@@ -8,7 +8,7 @@ To use it add it to your flake inputs:
 # flake.nix
 {
     inputs = {
-        rnix.url = "github:sciencefidelity/rnix";
+        rhea.url = "github:sciencefidelity/rhea";
     }
 }
 ```
@@ -21,20 +21,20 @@ Now you can add it to your home packages:
 
 {
     home.packages = [
-        inputs.rnix.packages.${pkgs.system}.default
+        inputs.rhea.packages.${pkgs.system}.default
     ];
 }
 ```
 
-Now the `rnix` command is available for your user and is a basic replacement for `cargo new`:
+Now the `rhea` command is available for your user and is a basic replacement for `cargo new`:
 
 ```bash
 # make a binary project called foo-bar
-rnix foo-bar
+rhea foo-bar
 # this also works
-rnix foo-bar --bin
+rhea foo-bar --bin
 # make a library project instead
-rnix foo-bar --lib
+rhea foo-bar --lib
 # now have fun developing with Nix...
 cd foo-bar
 direnv allow
