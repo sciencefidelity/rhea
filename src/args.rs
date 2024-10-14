@@ -1,5 +1,7 @@
+use std::fmt::{self, Display};
+
 use clap::{builder::EnumValueParser, Arg, ArgAction, Command, ValueEnum};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Possible values allowed for the `--edition` CLI flag.
 pub const RUST_EDITIONS: [&str; 4] = ["2015", "2018", "2021", "2024"];
@@ -13,6 +15,20 @@ pub enum Compiler {
     Nightly,
 }
 
+#[derive(Clone, Debug, ValueEnum, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LintGroup {
+    Pedantic,
+    Nursery,
+    Restriction,
+}
+
+impl Display for LintGroup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
 #[derive(Debug)]
 pub struct Args {
     pub path: String,
@@ -22,7 +38,9 @@ pub struct Args {
     pub description: String,
     pub bin: bool,
     pub lib: bool,
+    pub git: bool,
     pub packages: Vec<String>,
+    pub lint_groups: Vec<LintGroup>,
 }
 
 impl Args {
@@ -74,10 +92,24 @@ impl Args {
                     .help("Use the library template"),
             )
             .arg(
+                Arg::new("git")
+                    .long("git")
+                    .action(ArgAction::SetTrue)
+                    .help("Initialize a git repository"),
+            )
+            .arg(
                 Arg::new("packages")
                     .long("packages")
                     .value_name("PACKAGE")
                     .help("Extra environment packages")
+                    .num_args(1..),
+            )
+            .arg(
+                Arg::new("lints")
+                    .long("lints")
+                    .value_name("LINTS")
+                    .value_parser(EnumValueParser::<LintGroup>::new())
+                    .help("Extra lint groups")
                     .num_args(1..),
             )
             .get_matches();
@@ -104,8 +136,14 @@ impl Args {
             bin = false;
             lib = true;
         }
+        let git = matches.get_flag("git");
         let packages = matches
             .get_many("packages")
+            .unwrap_or_default()
+            .cloned()
+            .collect();
+        let lint_groups = matches
+            .get_many("lints")
             .unwrap_or_default()
             .cloned()
             .collect();
@@ -118,7 +156,9 @@ impl Args {
             description,
             bin,
             lib,
+            git,
             packages,
+            lint_groups,
         }
     }
 }
