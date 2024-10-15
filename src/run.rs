@@ -4,23 +4,46 @@ use crate::readme::generate_readme;
 use crate::rust::{generate_bin, generate_cargo_toml, generate_lib};
 use crate::{nix::generate_flake, Args};
 use anyhow::Result;
+use dialoguer::Confirm;
 
 #[allow(clippy::missing_errors_doc)]
 pub fn run(args: &Args) -> Result<()> {
+    let root_dir = create_root_dir(args)?;
+    create_files(args, &root_dir)?;
+    create_git_repo(args, &root_dir)?;
+    Ok(())
+}
+
+pub fn create_root_dir(args: &Args) -> Result<PathBuf> {
     let root_dir = if args.path == ".".to_owned() {
         std::env::current_dir()?
     } else {
         PathBuf::from(&args.path)
     };
-    // TODO: prompt that directory already exists and ask if we should use it.
+
+    // TODO: if we create the same directory twice there is an error `File exists (os error 17)`
     if root_dir.exists() {
         if root_dir.read_dir()?.next().is_some() {
-            eprintln!("directory '{}' already exists and is not empty", args.path);
-            std::process::exit(1);
+            let confirmation = Confirm::new()
+                .with_prompt(format!(
+                    "directory '{}' already exists and is not empty",
+                    args.path
+                ))
+                .default(true)
+                .interact()
+                .unwrap();
+
+            if !confirmation {
+                std::process::exit(1);
+            }
         }
     } else {
         fs::create_dir(&root_dir)?;
     }
+    Ok(root_dir)
+}
+
+fn create_files(args: &Args, root_dir: &PathBuf) -> Result<()> {
     fs::write(root_dir.join(".envrc"), "use flake\ndotenv\n")?;
     let current_dir = env::current_dir()?;
     fs::write(
@@ -39,6 +62,10 @@ pub fn run(args: &Args) -> Result<()> {
     } else if args.lib {
         fs::write(src_dir.join("lib.rs"), generate_lib())?;
     }
+    Ok(())
+}
+
+fn create_git_repo(args: &Args, root_dir: &PathBuf) -> Result<()> {
     if args.git {
         let _repo = git2::Repository::init(&root_dir)?;
         // TODO: git add .

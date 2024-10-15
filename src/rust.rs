@@ -1,4 +1,4 @@
-use indoc::formatdoc;
+use indoc::{formatdoc, indoc};
 
 use crate::Args;
 
@@ -43,28 +43,30 @@ pub fn generate_cargo_toml(args: &Args) -> String {
 }
 
 pub fn generate_bin() -> String {
-    formatdoc! {r#"
-        fn main() {{
+    indoc! {r#"
+        fn main() {
             println!("Hello, world!");
-        }}
+        }
     "#}
+    .to_owned()
 }
 
 pub fn generate_lib() -> String {
-    formatdoc! {r#"
-        pub fn add(left: u64, right: u64) -> u64 {{
+    indoc! {r#"
+        pub fn add(left: u64, right: u64) -> u64 {
             left + right
-        }}
+        }
 
         #[cfg(test)]
-        mod tests {{
+        mod tests {
             use super::*;
 
             #[test]
-            fn it_works() {{
+            fn it_works() {
                 let result = add(2, 2);
                 assert_eq!(result, 4);
-            }}
-        }}
+            }
+        }
     "#}
+    .to_owned()
 }
