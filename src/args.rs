@@ -1,4 +1,7 @@
-use std::fmt::{self, Display};
+use std::{
+    fmt::{self, Display},
+    str::FromStr,
+};
 
 use clap::{builder::EnumValueParser, Arg, ArgAction, Command, ValueEnum};
 use serde::{Deserialize, Serialize};
@@ -23,12 +26,6 @@ pub enum LintGroup {
     Restriction,
 }
 
-impl Display for LintGroup {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_lowercase())
-    }
-}
-
 #[derive(Debug)]
 pub struct Args {
     pub path: String,
@@ -41,6 +38,7 @@ pub struct Args {
     pub git: bool,
     pub packages: Vec<String>,
     pub lint_groups: Vec<LintGroup>,
+    pub interactive: bool,
 }
 
 impl Args {
@@ -112,6 +110,13 @@ impl Args {
                     .help("Extra lint groups")
                     .num_args(1..),
             )
+            .arg(
+                Arg::new("interactive")
+                    .long("interactive")
+                    .short('i')
+                    .action(ArgAction::SetTrue)
+                    .help("Run the interactive prompt"),
+            )
             .get_matches();
 
         let path = matches
@@ -147,6 +152,7 @@ impl Args {
             .unwrap_or_default()
             .cloned()
             .collect();
+        let interactive = matches.get_flag("interactive");
 
         Self {
             path,
@@ -159,6 +165,7 @@ impl Args {
             git,
             packages,
             lint_groups,
+            interactive,
         }
     }
 }
@@ -171,3 +178,41 @@ pub const CLAP_STYLING: clap::builder::styling::Styles = clap::builder::styling:
     .error(clap_cargo::style::ERROR)
     .valid(clap_cargo::style::VALID)
     .invalid(clap_cargo::style::INVALID);
+
+impl FromStr for Compiler {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "stable" => Ok(Self::Stable),
+            "beta" => Ok(Self::Beta),
+            "nightly" => Ok(Self::Nightly),
+            _ => Err(anyhow::Error::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "not a valid compiler",
+            ))),
+        }
+    }
+}
+
+impl Display for LintGroup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
+impl FromStr for LintGroup {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pedantic" => Ok(Self::Pedantic),
+            "nursery" => Ok(Self::Nursery),
+            "restriction" => Ok(Self::Restriction),
+            _ => Err(anyhow::Error::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "not a valid lint type",
+            ))),
+        }
+    }
+}

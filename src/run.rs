@@ -1,5 +1,6 @@
 use std::{env, fs, path::PathBuf};
 
+use crate::interactive;
 use crate::readme::generate_readme;
 use crate::rust::{generate_bin, generate_cargo_toml, generate_lib};
 use crate::{nix::generate_flake, Args};
@@ -7,8 +8,12 @@ use anyhow::Result;
 use dialoguer::Confirm;
 
 #[allow(clippy::missing_errors_doc)]
-pub fn run(args: &Args) -> Result<()> {
-    let root_dir = create_root_dir(args)?;
+pub fn run(args: &mut Args) -> Result<()> {
+    let root_dir = if args.interactive {
+        interactive::run(args)?
+    } else {
+        create_root_dir(args)?
+    };
     create_files(args, &root_dir)?;
     create_git_repo(args, &root_dir)?;
     Ok(())
