@@ -1,8 +1,8 @@
 use indoc::{formatdoc, indoc};
 
-use crate::Args;
+use crate::{config::Config, Args};
 
-pub fn generate_cargo_toml(args: &Args) -> String {
+pub fn generate_cargo_toml(args: &Args, config: &Config) -> String {
     let name = args.name.as_str();
     let description = args.description.as_str();
     let edition = args.edition;
@@ -16,17 +16,17 @@ pub fn generate_cargo_toml(args: &Args) -> String {
         "#, i + 1};
         lint_groups.push_str(text.as_str());
     }
-    // TODO: get author, GitHub username and email programmatically.
+
     formatdoc! {r#"
         [package]
         name = "{name}"
         version = "0.1.0"
         edition = "{edition}"
-        authors = ["Matt Cook <matt@mattcook.dev>"]
+        authors = ["{} <{}>"]
         description = "{description}"
         readme = "README.md"
-        repository = "https://github.com/sciencefidelity/{name}"
-        license = "MIT or Apache-2.0"
+        repository = "https://github.com/{}/{name}"
+        license = "{}"
 
         [lints.rust]
         unsafe_code = "forbid"
@@ -39,7 +39,12 @@ pub fn generate_cargo_toml(args: &Args) -> String {
         strip = "symbols"
 
         [dependencies]
-    "#}
+    "#,
+    config.user.name,
+    config.user.email,
+    config.user.github_username,
+    config.package.license
+    }
 }
 
 pub fn generate_bin() -> String {

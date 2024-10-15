@@ -1,0 +1,7 @@
+[user]
+name = "Matt Cook"
+email = "matt@mattcook.dev"
+github_username = "sciencefidelity"
+
+[package]
+license = "MIT or Apache-2.0"

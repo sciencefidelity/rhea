@@ -1,20 +1,24 @@
 use std::{env, fs, path::PathBuf};
 
+use anyhow::Result;
+use dialoguer::Confirm;
+
+use crate::config::{self, Config};
 use crate::interactive;
 use crate::readme::generate_readme;
 use crate::rust::{generate_bin, generate_cargo_toml, generate_lib};
 use crate::{nix::generate_flake, Args};
-use anyhow::Result;
-use dialoguer::Confirm;
 
 #[allow(clippy::missing_errors_doc)]
 pub fn run(args: &mut Args) -> Result<()> {
+    let config = config::read()?;
+
     let root_dir = if args.interactive {
         interactive::run(args)?
     } else {
         create_root_dir(args)?
     };
-    create_files(args, &root_dir)?;
+    create_files(args, &config, &root_dir)?;
     create_git_repo(args, &root_dir)?;
     Ok(())
 }
@@ -48,7 +52,7 @@ pub fn create_root_dir(args: &Args) -> Result<PathBuf> {
     Ok(root_dir)
 }
 
-fn create_files(args: &Args, root_dir: &PathBuf) -> Result<()> {
+fn create_files(args: &Args, config: &Config, root_dir: &PathBuf) -> Result<()> {
     fs::write(root_dir.join(".envrc"), "use flake\ndotenv\n")?;
     let current_dir = env::current_dir()?;
     fs::write(
@@ -57,7 +61,10 @@ fn create_files(args: &Args, root_dir: &PathBuf) -> Result<()> {
     )?;
     fs::write(root_dir.join(".gitignore"), "/target\n/.direnv\n.env\n")?;
     fs::write(root_dir.join("flake.nix"), generate_flake(args))?;
-    fs::write(root_dir.join("Cargo.toml"), generate_cargo_toml(args))?;
+    fs::write(
+        root_dir.join("Cargo.toml"),
+        generate_cargo_toml(args, config),
+    )?;
     fs::write(root_dir.join("README.md"), generate_readme(args))?;
 
     let src_dir = root_dir.join("src");
