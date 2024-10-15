@@ -1,4 +1,5 @@
 pub mod args;
+mod interactive;
 mod nix;
 mod readme;
 mod run;
